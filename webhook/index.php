@@ -22,7 +22,7 @@ function send_to($reciever_id, $message) {
     curl_close($ch);
 }
 
-function handle_message($sender, $message) {
+function handle_message($sender_id, $message) {
 	include "commands.php";
 
 	$expression = explode(" ", $message);
@@ -62,6 +62,7 @@ switch ($req["method"]) {
     		$message = $body["value"]["message"]["text"];
     		handle_message($sender_id, $message);
     		http_respond_code(200);
+			error_log($message, 3, "../log_file.log");
 		}
 }
 
