@@ -57,12 +57,12 @@ switch ($req["method"]) {
 		break;		
 	case "POST":
 		$body = json_decode(file_get_contents("php://input"), true);
+		error_log("\n".$body."\n", 3, "./log_file.log");
 		if ($body["field"] === "messages") {
 		    $sender_id = $body["value"]["sender"]["id"];
     		$message = $body["value"]["message"]["text"];
     		handle_message($sender_id, $message);
     		http_respond_code(200);
-			error_log($message, 3, "../log_file.log");
 		}
 }
 
