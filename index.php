@@ -17,7 +17,7 @@ switch ($req) {
                 		<title>owo</title>
             		</head>
             		<body>
-					'.file_get_contents("log_file.log").' 
+					<span>'.file_get_contents("log_file.log").'</span>
             		</body>
             	</html>
         	';

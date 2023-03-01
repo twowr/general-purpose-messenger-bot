@@ -1,11 +1,12 @@
 <?php
 
-$access_token;
-$verify_token;
-
 include "../secret.php";
 
+error_reporting(0);
+
 function send_to($reciever_id, $message) {
+    include "../secret.php";
+    
 	$res = [
 		"recipient" => [
 			"id" => $reciever_id,
@@ -23,32 +24,38 @@ function send_to($reciever_id, $message) {
 }
 
 function handle_message($sender_id, $message) {
-	include "commands.php";
-
+    include "commands.php";
+    
 	$expression = explode(" ", $message);
 	$res = "";
-
+    
 	if (array_key_exists($expression[0], $commands)) {
 		$command = $expression[0];
 		$args = $expression;
 		unset($args[0]);
 		$args = array_values($args);
 		
+		print_r($args);
+		
 		$res = $commands[$command]($args);
+	    send_to($sender_id, $res);
 	}
 
-	send_to($sender_id, $res);
+	return $res;
+
 }
 
 $req["method"] = $_SERVER["REQUEST_METHOD"];
 switch ($req["method"]) {
 	case "GET":
+	    include "../secret.php";
 		$mode = $_REQUEST["hub_mode"];
 		$token = $_REQUEST["hub_verify_token"];
 		$challenge = $_REQUEST["hub_challenge"];
 		if ($mode && $token) {
 			if ($mode === "subscribe" && $token === $verify_token ) {
-				http_respond_code(200);
+				$res["status_code_header"] = "HTTP/1.1 200 OK";
+			    header($res["status_code_header"]);
 				echo $challenge;
 			}
 		} else {
@@ -57,12 +64,13 @@ switch ($req["method"]) {
 		break;		
 	case "POST":
 		$body = json_decode(file_get_contents("php://input"), true);
-		error_log("\n".$body."\n", 3, "./log_file.log");
 		if ($body["field"] === "messages") {
 		    $sender_id = $body["value"]["sender"]["id"];
     		$message = $body["value"]["message"]["text"];
-    		handle_message($sender_id, $message);
-    		http_respond_code(200);
+    		$res = handle_message($sender_id, $message);
+			file_put_contents("../log_file.log", "\n".file_get_contents("php://input")."\nrespond: ".$res, FILE_APPEND | FILE_USE_INCLUDE_PATH);
+    		$status["status_code_header"] = "HTTP/1.1 200 OK";
+			header($status["status_code_header"]);
 		}
 }
 
