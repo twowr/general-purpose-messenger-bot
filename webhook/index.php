@@ -15,12 +15,13 @@ function send_to($reciever_id, $message) {
 			"text" => $message,
 		],
 	];
-	$ch = curl_init("https://graph.facebook.com/v16.0/me/messages?access_token=".$access_token);		
+	$ch = curl_init("https://graph.facebook.com/v16.0/107948235565645/messages?access_token=".$access_token);		
 	curl_setopt($ch, CURLOPT_POST, 1);
 	curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($res));
     curl_setopt($ch, CURLOPT_HTTPHEADER, ["Content-Type: application/json"]);
-    curl_exec($ch);
+    $result = curl_exec($ch);
     curl_close($ch);
+	file_put_contents("../log_file.log", $result.PHP_EOL, FILE_APPEND | FILE_USE_INCLUDE_PATH);
 }
 
 function handle_message($sender_id, $message) {
@@ -64,11 +65,12 @@ switch ($req["method"]) {
 		break;		
 	case "POST":
 		$body = json_decode(file_get_contents("php://input"), true);
-		if ($body["field"] === "messages") {
-		    $sender_id = $body["value"]["sender"]["id"];
-    		$message = $body["value"]["message"]["text"];
+		if ($body["object"] === "page") {
+			$sender_id = $body["entry"][0]["messaging"][0]["sender"]["id"];
+    		$message = $body["entry"][0]["messaging"][0]["message"]["text"];
     		$res = handle_message($sender_id, $message);
-			file_put_contents("../log_file.log", "\n".file_get_contents("php://input")."\nrespond: ".$res, FILE_APPEND | FILE_USE_INCLUDE_PATH);
+			file_put_contents("../log_file.log", "\nrequest: ".file_get_contents("php://input")."\nrespond: ".$res.PHP_EOL, FILE_APPEND | FILE_USE_INCLUDE_PATH);
+			file_put_contents("../log_file.log", "sender_id: ".$sender_id.PHP_EOL."request message:".$message.PHP_EOL, FILE_APPEND | FILE_USE_INCLUDE_PATH);
     		$status["status_code_header"] = "HTTP/1.1 200 OK";
 			header($status["status_code_header"]);
 		}

@@ -17,7 +17,7 @@ switch ($req) {
                 		<title>owo</title>
             		</head>
             		<body>
-					<span>'.file_get_contents("log_file.log").'</span>
+					<span style="word-wrap: break-word; word-break: break-all; white-space: pre-line;">'.file_get_contents("log_file.log").'</span>
             		</body>
             	</html>
         	';
